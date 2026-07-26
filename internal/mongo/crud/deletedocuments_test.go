@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/mongo/crud/internal/mongo/crud"
-	"github.com/mongo/crud/internal/mongo/util"
+	"migrated-app/internal/mongo/crud"
+	"migrated-app/internal/mongo/util"
 )
 
 // ---------------------------------------------------------------------------
