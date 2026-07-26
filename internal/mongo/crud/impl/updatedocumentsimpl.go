@@ -30,8 +30,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/example/project/internal/logging"
-	"github.com/example/project/internal/mongo/util"
+	"migrated-app/internal/logging"
+	"migrated-app/internal/mongo/util"
 )
 
 // UpdateDocumentsImpl is the concrete implementation of the
