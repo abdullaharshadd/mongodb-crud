@@ -37,7 +37,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/mongo/crud/internal/mongo/util"
+	"migrated-app/internal/mongo/util"
 )
 
 // DeleteDocuments is the contract for MongoDB document deletion operations.
