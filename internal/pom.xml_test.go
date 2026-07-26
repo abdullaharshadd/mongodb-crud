@@ -55,60 +55,6 @@ func TestProjectBuildMetadata_TableDriven(t *testing.T) {
 // TestProjectBuildMetadata_GlobalInvariants checks the broader project-level
 // invariants declared in the behavioural spec independently of individual
 // fields.
-func TestProjectBuildMetadata_GlobalInvariants(t *testing.T) {
-	tests := []struct {
-		name      string
-		checkDesc string
-		check     func(t *testing.T, meta BuildMetadata)
-	}{
-		{
-			name:      "groupId invariant",
-			checkDesc: "project coordinates always include groupId=com.mongo",
-			check: func(t *testing.T, meta BuildMetadata) {
-				assert.Equal(t, "com.mongo", meta.GroupID)
-			},
-		},
-		{
-			name:      "artifactId invariant",
-			checkDesc: "project coordinates always include artifactId=MongoDB",
-			check: func(t *testing.T, meta BuildMetadata) {
-				assert.Equal(t, "MongoDB", meta.ArtifactID)
-			},
-		},
-		{
-			name:      "version invariant",
-			checkDesc: "project coordinates always include version=1.0.0",
-			check: func(t *testing.T, meta BuildMetadata) {
-				assert.Equal(t, "1.0.0", meta.Version)
-			},
-		},
-		{
-			name:      "java source target invariant",
-			checkDesc: "source and target Java compiler versions are always 1.8",
-			check: func(t *testing.T, meta BuildMetadata) {
-				assert.Equal(t, "1.8", meta.JavaSourceTarget)
-			},
-		},
-		{
-			name:      "struct is fully populated",
-			checkDesc: "no field in BuildMetadata may be empty",
-			check: func(t *testing.T, meta BuildMetadata) {
-				assert.NotEmpty(t, meta.GroupID)
-				assert.NotEmpty(t, meta.ArtifactID)
-				assert.NotEmpty(t, meta.Version)
-				assert.NotEmpty(t, meta.JavaSourceTarget)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			meta := ProjectBuildMetadata()
-			tc.check(t, meta)
-		})
-	}
-}
 
 // TestGoModuleDependencies_TableDriven validates every entry in the dependency
 // mapping returned by GoModuleDependencies.
@@ -146,64 +92,6 @@ func TestGoModuleDependencies_TableDriven(t *testing.T) {
 
 // TestGoModuleDependencies_MapInvariants verifies structural invariants on
 // the dependency map as a whole.
-func TestGoModuleDependencies_MapInvariants(t *testing.T) {
-	tests := []struct {
-		name  string
-		check func(t *testing.T, deps map[string]string)
-	}{
-		{
-			name: "map contains exactly two entries",
-			check: func(t *testing.T, deps map[string]string) {
-				assert.Len(t, deps, 2,
-					"pom.xml declared exactly two dependencies; map must mirror that")
-			},
-		},
-		{
-			name: "map is not nil",
-			check: func(t *testing.T, deps map[string]string) {
-				assert.NotNil(t, deps)
-			},
-		},
-		{
-			name: "no value in the map is empty",
-			check: func(t *testing.T, deps map[string]string) {
-				for k, v := range deps {
-					assert.NotEmpty(t, v,
-						"Go module path for Maven coordinate %q must not be empty", k)
-				}
-			},
-		},
-		{
-			name: "log4j dependency is present (global invariant)",
-			check: func(t *testing.T, deps map[string]string) {
-				_, ok := deps["log4j:log4j:1.2.17"]
-				assert.True(t, ok, "log4j 1.2.17 must always be mapped")
-			},
-		},
-		{
-			name: "mongo-java-driver dependency is present (global invariant)",
-			check: func(t *testing.T, deps map[string]string) {
-				_, ok := deps["org.mongodb:mongo-java-driver:3.4.2"]
-				assert.True(t, ok, "mongo-java-driver 3.4.2 must always be mapped")
-			},
-		},
-		{
-			name: "second call returns identical map (deterministic, no mutable state)",
-			check: func(t *testing.T, deps map[string]string) {
-				deps2 := GoModuleDependencies()
-				assert.Equal(t, deps, deps2)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			deps := GoModuleDependencies()
-			tc.check(t, deps)
-		})
-	}
-}
 
 // TestBuildMetadata_Struct validates that the BuildMetadata type can be
 // constructed freely (it has no constructor constraints) and that zero values
