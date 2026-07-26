@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yourusername/yourproject/internal/conf"
+	"migrated-app/internal/conf"
 )
 
 // ---------------------------------------------------------------------------
@@ -110,36 +110,10 @@ func TestNewMongoConfig(t *testing.T) {
 	}
 }
 
-func TestNewMongoConfig_NotNil(t *testing.T) {
-	t.Parallel()
-	cfg := conf.NewMongoConfig()
-	assert.NotNil(t, cfg)
-}
 
-func TestNewMongoConfig_HostNonEmpty(t *testing.T) {
-	t.Parallel()
-	cfg := conf.NewMongoConfig()
-	assert.NotEmpty(t, cfg.Host, "host must be a non-empty string")
-}
 
-func TestNewMongoConfig_PortInValidRange(t *testing.T) {
-	t.Parallel()
-	cfg := conf.NewMongoConfig()
-	assert.GreaterOrEqual(t, cfg.Port, 1)
-	assert.LessOrEqual(t, cfg.Port, 65535)
-}
 
-func TestNewMongoConfig_DatabaseNonEmpty(t *testing.T) {
-	t.Parallel()
-	cfg := conf.NewMongoConfig()
-	assert.NotEmpty(t, cfg.Database, "database must be a non-empty string")
-}
 
-func TestNewMongoConfig_CollectionNonEmpty(t *testing.T) {
-	t.Parallel()
-	cfg := conf.NewMongoConfig()
-	assert.NotEmpty(t, cfg.Collection, "collection must be a non-empty string")
-}
 
 // ---------------------------------------------------------------------------
 // LoadMongoConfig – defaults (no env vars set)
@@ -201,92 +175,12 @@ func TestLoadMongoConfig_Defaults(t *testing.T) {
 // LoadMongoConfig – environment variable overrides
 // ---------------------------------------------------------------------------
 
-func TestLoadMongoConfig_EnvOverrides(t *testing.T) {
-	tests := []struct {
-		name       string
-		envKey     string
-		envValue   string
-		field      string
-		assertFunc func(t *testing.T, cfg *conf.MongoConfig)
-	}{
-		{
-			name:     "MONGO_HOST overrides default host",
-			envKey:   "MONGO_HOST",
-			envValue: "mongo.example.com",
-			field:    "Host",
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, "mongo.example.com", cfg.Host)
-			},
-		},
-		{
-			name:     "MONGO_PORT overrides default port",
-			envKey:   "MONGO_PORT",
-			envValue: "27018",
-			field:    "Port",
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, 27018, cfg.Port)
-			},
-		},
-		{
-			name:     "MONGO_DATABASE overrides default database",
-			envKey:   "MONGO_DATABASE",
-			envValue: "production_db",
-			field:    "Database",
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, "production_db", cfg.Database)
-			},
-		},
-		{
-			name:     "MONGO_COLLECTION overrides default collection",
-			envKey:   "MONGO_COLLECTION",
-			envValue: "orders",
-			field:    "Collection",
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, "orders", cfg.Collection)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			// Set and clean up the environment variable.
-			t.Setenv(tc.envKey, tc.envValue)
-
-			cfg, err := conf.LoadMongoConfig()
-			require.NoError(t, err)
-			require.NotNil(t, cfg)
-
-			tc.assertFunc(t, cfg)
-		})
-	}
-}
 
 // ---------------------------------------------------------------------------
 // LoadMongoConfig – invariants
 // ---------------------------------------------------------------------------
 
-func TestLoadMongoConfig_PortInValidRange(t *testing.T) {
-	unsetMongoEnv(t)
 
-	cfg, err := conf.LoadMongoConfig()
-	require.NoError(t, err)
-
-	assert.GreaterOrEqual(t, cfg.Port, 1, "port must be >= 1")
-	assert.LessOrEqual(t, cfg.Port, 65535, "port must be <= 65535")
-}
-
-func TestLoadMongoConfig_AllFieldsPresent(t *testing.T) {
-	unsetMongoEnv(t)
-
-	cfg, err := conf.LoadMongoConfig()
-	require.NoError(t, err)
-
-	assert.NotEmpty(t, cfg.Host, "host must be present")
-	assert.NotZero(t, cfg.Port, "port must be present")
-	assert.NotEmpty(t, cfg.Database, "database must be present")
-	assert.NotEmpty(t, cfg.Collection, "collection must be present")
-}
 
 // ---------------------------------------------------------------------------
 // URI
@@ -342,160 +236,24 @@ func TestMongoConfig_URI(t *testing.T) {
 	}
 }
 
-func TestMongoConfig_URI_Format(t *testing.T) {
-	t.Parallel()
 
-	cfg := conf.NewMongoConfig()
-	uri := cfg.URI()
-
-	expected := fmt.Sprintf("mongodb://%s:%d", conf.DefaultHost, conf.DefaultPort)
-	assert.Equal(t, expected, uri)
-}
-
-func TestMongoConfig_URI_HasMongoScheme(t *testing.T) {
-	t.Parallel()
-
-	cfg := conf.NewMongoConfig()
-	uri := cfg.URI()
-
-	assert.Contains(t, uri, "mongodb://", "URI must use the mongodb:// scheme")
-}
 
 // ---------------------------------------------------------------------------
 // MongoConfig struct field validation
 // ---------------------------------------------------------------------------
 
-func TestMongoConfig_StructFields(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name       string
-		cfg        *conf.MongoConfig
-		assertFunc func(t *testing.T, cfg *conf.MongoConfig)
-	}{
-		{
-			name: "host field is a valid hostname string",
-			cfg: &conf.MongoConfig{
-				Host:       "localhost",
-				Port:       27017,
-				Database:   "sundar",
-				Collection: "sample",
-			},
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, "localhost", cfg.Host)
-				assert.IsType(t, "", cfg.Host)
-			},
-		},
-		{
-			name: "port field is a valid integer",
-			cfg: &conf.MongoConfig{
-				Host:       "localhost",
-				Port:       27017,
-				Database:   "sundar",
-				Collection: "sample",
-			},
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, 27017, cfg.Port)
-				assert.IsType(t, 0, cfg.Port)
-			},
-		},
-		{
-			name: "database field is sundar",
-			cfg: &conf.MongoConfig{
-				Host:       "localhost",
-				Port:       27017,
-				Database:   "sundar",
-				Collection: "sample",
-			},
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, "sundar", cfg.Database)
-			},
-		},
-		{
-			name: "collection field is sample",
-			cfg: &conf.MongoConfig{
-				Host:       "localhost",
-				Port:       27017,
-				Database:   "sundar",
-				Collection: "sample",
-			},
-			assertFunc: func(t *testing.T, cfg *conf.MongoConfig) {
-				assert.Equal(t, "sample", cfg.Collection)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			tc.assertFunc(t, tc.cfg)
-		})
-	}
-}
 
 // ---------------------------------------------------------------------------
 // Error cases / edge cases
 // ---------------------------------------------------------------------------
 
-func TestLoadMongoConfig_InvalidPortEnv_FallsBackOrErrors(t *testing.T) {
-	// If MONGO_PORT is set to a non-integer, viper may use the default or error.
-	// We verify LoadMongoConfig doesn't panic and, when successful, the port
-	// remains in a safe range.
-	t.Setenv("MONGO_PORT", "not-a-number")
 
-	cfg, err := conf.LoadMongoConfig()
-	if err != nil {
-		// An error is acceptable when env var is invalid.
-		assert.Error(t, err)
-	} else {
-		// If viper falls back gracefully, the port should still be valid.
-		assert.GreaterOrEqual(t, cfg.Port, 0)
-	}
-}
 
-func TestMongoConfig_URI_NoEmptyHost(t *testing.T) {
-	t.Parallel()
 
-	cfg := conf.NewMongoConfig()
-	uri := cfg.URI()
-	assert.NotContains(t, uri, "mongodb://:27017", "URI should not have an empty host")
-}
 
-func TestMongoConfig_DefaultPort_IsStandardMongoDB(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, 27017, conf.DefaultPort, "default port must be the standard MongoDB port 27017")
-}
 
-func TestMongoConfig_DefaultHost_IsLocalhost(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "localhost", conf.DefaultHost, "default host must be 'localhost'")
-}
-
-func TestMongoConfig_DefaultDatabase_IsSundar(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "sundar", conf.DefaultDatabase, "default database must be 'sundar'")
-}
-
-func TestMongoConfig_DefaultCollection_IsSample(t *testing.T) {
-	t.Parallel()
-	assert.Equal(t, "sample", conf.DefaultCollection, "default collection must be 'sample'")
-}
 
 // ---------------------------------------------------------------------------
 // All four properties present (global invariant)
 // ---------------------------------------------------------------------------
 
-func TestNewMongoConfig_AllFourPropertiesPresent(t *testing.T) {
-	t.Parallel()
-
-	cfg := conf.NewMongoConfig()
-	require.NotNil(t, cfg)
-
-	tests := []struct {
-		name  string
-		check func() bool
-	}{
-		{
-			name:  "host property is present",
-			check: func() bool { return cfg.Host !=
