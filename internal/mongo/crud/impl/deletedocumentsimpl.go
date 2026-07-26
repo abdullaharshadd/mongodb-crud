@@ -30,7 +30,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/example/mongoapp/internal/mongo/util"
+	"migrated-app/internal/mongo/util"
 )
 
 // DeleteDocumentsImpl is the concrete implementation of the DeleteDocuments
