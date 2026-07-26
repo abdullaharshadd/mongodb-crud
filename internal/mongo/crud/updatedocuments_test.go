@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/mongo/crud/internal/mongo/crud"
+	"migrated-app/internal/mongo/crud"
 )
 
 // ---------------------------------------------------------------------------
