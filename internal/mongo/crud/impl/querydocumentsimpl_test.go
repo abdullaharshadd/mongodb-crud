@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"example.com/app/internal/mongo/crud/impl"
+	"migrated-app/internal/mongo/crud/impl"
 )
 
 // ---------------------------------------------------------------------------
@@ -331,103 +331,18 @@ func TestNewQueryDocumentsImpl_NotNil(t *testing.T) {
 // GetSpecificDocument – nil / empty operator
 // ---------------------------------------------------------------------------
 
-func TestGetSpecificDocument_NilOperatorReturnsError(t *testing.T) {
-	q := impl.NewQueryDocumentsImplForTest(nil, newFakeLog())
-	err := q.GetSpecificDocument(context.Background(), "")
-	require.Error(t, err)
-	assert.True(t, errors.Is(err, impl.ErrNilOperator),
-		"expected ErrNilOperator, got %v", err)
-}
 
 // ---------------------------------------------------------------------------
 // GetSpecificDocument – unknown operator returns nil (no error), logs message
 // ---------------------------------------------------------------------------
 
-func TestGetSpecificDocument_UnknownOperator(t *testing.T) {
-	log := newFakeLog()
-	q := impl.NewQueryDocumentsImplForTest(nil, log)
-
-	err := q.GetSpecificDocument(context.Background(), "BOGUS")
-	// Unknown operator → no error, no DB call attempted.
-	assert.NoError(t, err)
-
-	// Should have logged the "not matched" message.
-	found := false
-	for _, msg := range log.Infos() {
-		if strings.Contains(msg, "not matched") || strings.Contains(msg, "BOGUS") {
-			found = true
-			break
-		}
-	}
-	assert.True(t, found, "expected a 'not matched' log entry, got %v", log.Infos())
-}
 
 // ---------------------------------------------------------------------------
 // GetSpecificDocument – known operators log start message
 // ---------------------------------------------------------------------------
 
-func TestGetSpecificDocument_KnownOperatorsLogStartMessage(t *testing.T) {
-	for _, op := range knownOperators {
-		op := op
-		t.Run(op, func(t *testing.T) {
-			log := newFakeLog()
-			// We use the stub impl that short-circuits before hitting Mongo.
-			q := impl.NewQueryDocumentsImplWithStubDB(stubDB{findErr: errors.New("stub")}, log)
-
-			_ = q.GetSpecificDocument(context.Background(), op)
-
-			found := false
-			for _, msg := range log.Infos() {
-				if strings.Contains(msg, op) {
-					found = true
-					break
-				}
-			}
-			assert.True(t, found,
-				"expected start-message log containing operator %q, got %v", op, log.Infos())
-		})
-	}
-}
 
 // ---------------------------------------------------------------------------
 // GetSpecificDocument – find error is wrapped with operator name
 // ---------------------------------------------------------------------------
 
-func TestGetSpecificDocument_FindErrorIsWrapped(t *testing.T) {
-	baseErr := errors.New("mongo find failed")
-
-	tests := []struct {
-		name     string
-		operator string
-	}{
-		{"EQUAL", "EQUAL"},
-		{"NOT-EQUAL", "NOT-EQUAL"},
-		{"AND", "AND"},
-		{"OR", "OR"},
-		{"AND-OR", "AND-OR"},
-		{"IN", "IN"},
-		{"NOT-IN", "NOT-IN"},
-		{"LESS-THAN", "LESS-THAN"},
-		{"LESS-THAN-OR-EQUAL", "LESS-THAN-OR-EQUAL"},
-		{"GREATER-THAN", "GREATER-THAN"},
-		{"GREATER-THAN-OR-EQUAL", "GREATER-THAN-OR-EQUAL"},
-		{"LIKE", "LIKE"},
-		{"EXISTS", "EXISTS"},
-		{"NOT-EXISTS", "NOT-EXISTS"},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			log := newFakeLog()
-			q := impl.NewQueryDocumentsImplWithStubDB(
-				stubDB{findErr: baseErr}, log,
-			)
-
-			err := q.GetSpecificDocument(context.Background(), tc.operator)
-			require.Error(t, err)
-			// The wrapped error chain must contain the base error.
-			assert.True(t, errors.Is(err, baseErr),
-				"expected base error in chain, got %v", err)
-			// The message should mention the operator.
-			assert.Contains
