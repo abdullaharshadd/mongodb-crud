@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mongo/app/internal/mongo/crud"
-	"github.com/mongo/app/internal/mongo/util"
+	"migrated-app/internal/mongo/crud"
+	"migrated-app/internal/mongo/util"
 )
 
 // ---------------------------------------------------------------------------
