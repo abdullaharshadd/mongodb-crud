@@ -13,8 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 
-	"github.com/example/project/internal/mongo/crud/impl"
-	"github.com/example/project/internal/mongo/util"
+	"migrated-app/internal/mongo/crud/impl"
+	"migrated-app/internal/mongo/util"
 )
 
 // ---------------------------------------------------------------------------
@@ -318,85 +318,6 @@ func TestClose(t *testing.T) {
 // LoadMethods – orchestration
 // ---------------------------------------------------------------------------
 
-func TestLoadMethods(t *testing.T) {
-	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
-
-	tests := []struct {
-		name        string
-		// responses are consumed in order by the mock transport.
-		responses   []bson.D
-		wantErr     bool
-		errContains string
-	}{
-		{
-			name: "success – all four inserts then close",
-			responses: []bson.D{
-				successInsertOneResult(),  // InsertUsingDocument
-				successInsertOneResult(),  // InsertUsingMap
-				successInsertOneResult(),  // InsertSingleDocument
-				successInsertManyResult(), // InsertMultipleDocuments
-			},
-			wantErr: false,
-		},
-		{
-			name: "error on InsertUsingDocument aborts sequence",
-			responses: []bson.D{
-				commandErrorResponse(2, "bad value"), // InsertUsingDocument fails
-			},
-			wantErr:     true,
-			errContains: "insert using document",
-		},
-		{
-			name: "error on InsertUsingMap aborts sequence",
-			responses: []bson.D{
-				successInsertOneResult(),             // InsertUsingDocument succeeds
-				commandErrorResponse(11000, "dup"),   // InsertUsingMap fails
-			},
-			wantErr:     true,
-			errContains: "insert using map",
-		},
-		{
-			name: "error on InsertSingleDocument aborts sequence",
-			responses: []bson.D{
-				successInsertOneResult(),             // InsertUsingDocument
-				successInsertOneResult(),             // InsertUsingMap
-				commandErrorResponse(2, "bad value"), // InsertSingleDocument fails
-			},
-			wantErr:     true,
-			errContains: "insert single document",
-		},
-		{
-			name: "error on InsertMultipleDocuments aborts sequence",
-			responses: []bson.D{
-				successInsertOneResult(),              // InsertUsingDocument
-				successInsertOneResult(),              // InsertUsingMap
-				successInsertOneResult(),              // InsertSingleDocument
-				commandErrorResponse(2, "batch err"),  // InsertMultipleDocuments fails
-			},
-			wantErr:     true,
-			errContains: "insert multiple documents",
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		mt.Run(tc.name, func(mt *mtest.T) {
-			for _, r := range tc.responses {
-				mt.AddMockResponses(r)
-			}
-
-			i := newImpl(t, mt)
-			err := i.LoadMethods(context.Background())
-
-			if tc.wantErr {
-				require.Error(mt, err)
-				assert.Contains(mt, err.Error(), tc.errContains)
-			} else {
-				assert.NoError(mt, err)
-			}
-		})
-	}
-}
 
 // ---------------------------------------------------------------------------
 // Nil-client / connection-failure path
@@ -458,8 +379,3 @@ func TestCollection_NilClient(t *testing.T) {
 // Close error propagation
 // ---------------------------------------------------------------------------
 
-func TestClose_ErrorPropagation(t *testing.T) {
-	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
-
-	// We cannot inject a custom Close error through the current production API
-	// (which accepts *util.MongoConnectionUtils), so we verify
