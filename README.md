@@ -1,30 +1,240 @@
 # mongodb-crud
 
-CRUD Operation
-==============
-In this Project I have done CRUD (Create Read Update and Delete) operation using java Api and MongoDB-3.4.9(NoSql)
-This is the beginners level application
+A Go application for performing CRUD operations against MongoDB. Migrated from the original Java/Spring implementation by [abdullaharshadd](https://github.com/abdullaharshadd/mongodb-crud).
 
-Prerequisites
-=============
-Install MondoDB-3.4.9 ( https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu )
-MongoDB support 64-bit machines only, it won't support 32-bit machines.
-after install the MongoDB just start the Mongo service and run this application.
+> ⚠️ **Migration confidence: 0% overall.** This codebase requires significant manual review before it is production-ready. Do not deploy without verifying every component listed in the [Manual Review Required](#manual-review-required) section.
 
-Running
-=======
-Import this project as a Maven, and Building this project using maven goals (clean install)
-It will create target directory on our project Home path. within this target directory jar file will be there.
-Run that jar with command-line argument(s). The command line argument should be atleast one argument atmost four argument
-The argument minimum value is 1 maximum value is 4
-1 for Create
-2 for Read
-3 for Update
-4 for Delete
+---
 
-For Example:
-java -jar MongoDB-1.0.0.jar 1 (or) java -Xms250m -Xmx250m -jar Mongo-1.0.0.jar 1
+## Tech Stack
 
-Authors
-=======
- * Sundararajan S ( @sundar815 )
+| Layer | Technology |
+|---|---|
+| Language | Go (standard library) |
+| Database | MongoDB |
+| Driver | [go.mongodb.org/mongo-driver](https://pkg.go.dev/go.mongodb.org/mongo-driver) |
+| Logging | Go `log/slog` (standard library) |
+| Build | Go modules (`go.mod` / `go.sum`) |
+
+---
+
+## Prerequisites
+
+- Go 1.21 or later
+- MongoDB 5.0 or later (running and accessible)
+- `git`
+
+> **Note:** The original project used Maven (`pom.xml`) as its build tool. There is no equivalent `pom.xml` in this repository. Dependency management is handled entirely through `go.mod`. See [Migration Notes](#migration-notes) for details.
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/abdullaharshadd/mongodb-crud.git
+cd mongodb-crud
+```
+
+### 2. Install dependencies
+
+> The setup plan detected `npm install` as the install command. **This is incorrect for a Go project.** Use the following instead:
+
+```bash
+go mod download
+go mod verify
+```
+
+### 3. Configure environment variables
+
+Copy the example environment file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+See the [Environment Variables](#environment-variables) section for all required values.
+
+### 4. Database setup
+
+No automated migration scripts were detected. Ensure your MongoDB instance is running and reachable at the host/port defined in your environment variables. The application will create collections on first write.
+
+```bash
+# Verify MongoDB is reachable (replace with your actual host/port)
+mongosh "mongodb://localhost:27017"
+```
+
+### 5. Run the application
+
+```bash
+go run ./cmd/main.go
+```
+
+Or build and run the binary:
+
+```bash
+go build -o mongodb-crud ./cmd/main.go
+./mongodb-crud
+```
+
+---
+
+## Running Tests
+
+```bash
+go test ./...
+```
+
+To run tests with verbose output and the race detector:
+
+```bash
+go test -v -race ./...
+```
+
+> ⚠️ No test commands were confirmed in the migration setup plan. If tests do not exist yet, they must be written. The original Java test entry point was `MongoTest.java` — see [Manual Review Required](#manual-review-required).
+
+---
+
+## Environment Variables
+
+No environment variables were automatically detected during migration. The following table reflects what the original Java code required based on source analysis. **Verify these against the actual migrated source before running.**
+
+| Variable | Description | Required | Example |
+|---|---|---|---|
+| `MONGO_HOST` | MongoDB server hostname | Yes | `localhost` |
+| `MONGO_PORT` | MongoDB server port | Yes | `27017` |
+| `MONGO_DB` | Target database name | Yes | `testdb` |
+| `MONGO_USER` | MongoDB username | No | `admin` |
+| `MONGO_PASSWORD` | MongoDB password | No | `secret` |
+
+> These variables were inferred from `MongoConnectionUtils.java`. Open the migrated equivalent file and confirm the exact variable names used.
+
+---
+
+## Architecture Overview
+
+The migrated Go code follows a package structure derived from the original Java package layout (`com.mongo.*`):
+
+```
+mongodb-crud/
+├── cmd/
+│   └── main.go            # Entry point (migrated from MongoTest.java)
+├── internal/
+│   ├── crud/
+│   │   ├── insert.go      # Migrated from InsertDocumentsImpl.java
+│   │   ├── query.go       # Migrated from QueryDocumentsImpl.java
+│   │   └── delete.go      # Migrated from DeleteDocumentsImpl.java
+│   ├── connection/
+│   │   └── mongo.go       # Migrated from MongoConnectionUtils.java
+│   └── utils/
+│       └── commons.go     # Migrated from Commons.java
+├── go.mod
+├── go.sum
+└── README.md
+```
+
+> ⚠️ The above structure reflects the **intended** layout based on the source Java packages. Verify that the actual files on disk match this structure before proceeding.
+
+---
+
+## Migration Notes
+
+The following summarises what changed between the original Java/Spring codebase and this Go port.
+
+### Build system
+
+| Before (Java/Maven) | After (Go) |
+|---|---|
+| `pom.xml` with Maven lifecycle phases | `go.mod` / `go.sum` |
+| `mvn package` produces executable JAR | `go build` produces native binary |
+| Classpath manifest auto-generated by Maven JAR plugin | Not required; Go produces a statically linked binary |
+| Dependency-copy and resource-filter Maven phases | Not applicable |
+
+The `pom.xml` **could not be automatically migrated** (see [Known Limitations](#known-limitations)). All dependency coordinates from the original POM must be manually verified against their Go equivalents.
+
+### Logging
+
+| Before | After |
+|---|---|
+| `log4j:log4j:1.2.17` (EOL, CVEs) | Go standard library `log/slog` |
+| `log4j.xml` with `DailyRollingFileAppender` | `slog` handlers; file rotation must be configured manually if needed |
+
+The original `log4j.xml` configuration used `DailyRollingFileAppender`, which has known reliability issues even within the Log4j 1.x ecosystem and has no direct equivalent in modern frameworks. If you require rotating file logs, add a third-party Go log rotation library such as [`lumberjack`](https://github.com/natefinish/lumberjack).
+
+### MongoDB driver
+
+The original code used the synchronous MongoDB Java driver. The Go port uses `go.mongodb.org/mongo-driver/mongo`, which is also synchronous by default but uses `context.Context` for timeout and cancellation. Ensure all database calls pass an appropriate context.
+
+### Dependency injection / Spring context
+
+The original project used Spring (inferred from the migration source). Go has no equivalent Spring container. Dependencies are wired manually, typically in `main.go` or via constructor functions. Review all files for missing wiring.
+
+---
+
+## Known Limitations
+
+The following components could **not** be automatically migrated. They require manual intervention before the application will work correctly.
+
+### 1. `pom.xml` — Maven build lifecycle
+
+**Reason:** `pom.xml` is Maven-specific metadata with no code equivalent. Plugin phase bindings (`validate`, `install`), manifest classpath generation, and the executable-JAR packaging step are Maven concepts with no automatic Go equivalent.
+
+**Action required:** Confirm that `go.mod` includes all dependencies that were declared in the original POM. Map each Maven dependency coordinate (`groupId:artifactId:version`) to a Go module path manually.
+
+### 2. `pom.xml` — `log4j:log4j:1.2.17`
+
+**Reason:** This library is end-of-life and carries multiple known security advisories (CVE-2019-17571 and others). It must not be carried forward.
+
+**Action required:** Logging has been replaced with `log/slog`. Verify that all log statements in the migrated code use the new API and that no references to Log4j remain.
+
+### 3. `src/log4j.xml` — `DailyRollingFileAppender`
+
+**Reason:** `DailyRollingFileAppender` is a Log4j 1.x-specific class with known reliability problems and no direct equivalent in any modern logging framework.
+
+**Action required:** If rotating file-based logging is required, manually configure a Go log rotation solution (e.g., `lumberjack`). Define the equivalent of the original appender's `DatePattern`, max backup index, and log level thresholds.
+
+### 4. `src/log4j.xml` — Log4j 1.x XML schema
+
+**Reason:** The entire DTD-based XML format used by Log4j 1.x is incompatible with modern logging frameworks.
+
+**Action required:** The original configuration file cannot be reused in any form. Logging behaviour (levels, outputs, formats) must be re-implemented using the Go logging setup.
+
+---
+
+## Manual Review Required
+
+Every file listed below had a **low migration confidence score** or contains logic that the automated migration could not reliably translate. A developer must open each file, read it against the original Java source, and confirm correctness before the application is used.
+
+| File | What to verify |
+|---|---|
+| `pom.xml` (original) | All dependency coordinates are mapped to Go equivalents in `go.mod`; no runtime dependencies are missing |
+| `src/log4j.xml` (original) | Logging behaviour (levels, file paths, rotation policy) is re-implemented correctly in Go |
+| `internal/utils/commons.go` | All utility methods from `Commons.java` are present, have correct signatures, and handle Go error conventions |
+| `internal/connection/mongo.go` | Connection string construction, auth, TLS settings, and connection pool configuration match the original intent |
+| `internal/crud/insert.go` | Insert logic, document mapping, and error handling match `InsertDocumentsImpl.java` |
+| `internal/crud/query.go` | Query filters, projection, cursor iteration, and result decoding match `QueryDocumentsImpl.java` |
+| `internal/crud/delete.go` | Delete filters and result handling match `DeleteDocumentsImpl.java` |
+| `cmd/main.go` | Entry point correctly initialises the MongoDB connection, wires all dependencies, and reproduces the test scenarios from `MongoTest.java` |
+
+### Recommended review process
+
+1. Open the original Java file side-by-side with its migrated Go equivalent.
+2. Trace every public method and confirm it exists and behaves identically.
+3. Check all error paths — Java exceptions do not map 1:1 to Go `error` returns.
+4. Run the test suite against a real MongoDB instance before merging.
+
+---
+
+## Contributing
+
+Because migration confidence is 0%, the immediate priority is correctness over new features. When opening a pull request:
+
+- Reference the original Java file for any logic change.
+- Include a test that exercises the changed code path against a real or mock MongoDB instance.
+
+---
+
+## License
+
+Refer to the original repository at [abdullaharshadd/mongodb-crud](https://github.com/abdullaharshadd/mongodb-crud) for licence information. No licence file was detected during migration.
