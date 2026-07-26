@@ -31,7 +31,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mongo/crud/internal/mongo/crud/impl"
+	"migrated-app/internal/mongo/crud/impl"
 )
 
 // RunInsertWorker performs the same unit of work the Java MongoCURDThread
@@ -45,7 +45,7 @@ import (
 //
 // MIGRATION_NOTE: The exact package path in the import above depends on the
 // module path declared in go.mod; adjust it if the module is not
-// "github.com/mongo/crud".
+// "migrated-app/crud".
 func RunInsertWorker(ctx context.Context) error {
 	insert := impl.NewInsertDocumentsImpl()
 	if err := insert.LoadMethods(ctx); err != nil {
