@@ -34,8 +34,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"example.com/app/internal/logging"
-	"example.com/app/internal/mongo/util"
+	"migrated-app/internal/logging"
+	"migrated-app/internal/mongo/util"
 )
 
 // ErrNilOperator is returned by GetSpecificDocument when the operator argument
