@@ -34,8 +34,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/example/project/internal/mongo/crud"
-	"github.com/example/project/internal/mongo/util"
+	"migrated-app/internal/mongo/crud"
+	"migrated-app/internal/mongo/util"
 )
 
 // InsertDocumentsImpl is the concrete implementation of the
