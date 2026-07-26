@@ -39,7 +39,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/mongo/internal/mongo/crud/impl"
+	"migrated-app/internal/mongo/crud/impl"
 )
 
 // InvalidMsg is the message logged when the supplied arguments are outside the
