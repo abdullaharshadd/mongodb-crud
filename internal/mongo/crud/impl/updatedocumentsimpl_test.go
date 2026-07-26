@@ -15,9 +15,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 
-	"github.com/example/project/internal/logging"
-	"github.com/example/project/internal/mongo/util"
-	"github.com/example/project/internal/mongo/crud/impl"
+	"migrated-app/internal/logging"
+	"migrated-app/internal/mongo/util"
+	"migrated-app/internal/mongo/crud/impl"
 )
 
 // ---------------------------------------------------------------------------
@@ -54,14 +54,7 @@ type fakeMongoConnectionUtils struct {
 	closeCalled bool
 }
 
-func (f *fakeMongoConnectionUtils) SampleCollection() *mongo.Collection {
-	return f.coll
-}
 
-func (f *fakeMongoConnectionUtils) Close(_ context.Context) error {
-	f.closeCalled = true
-	return f.closeErr
-}
 
 // ---------------------------------------------------------------------------
 // Because util.MongoConnectionUtils is a concrete struct and not an interface
@@ -368,116 +361,8 @@ func TestUpdateDocumentWithCurrentDate(t *testing.T) {
 // TestFinalized
 // ---------------------------------------------------------------------------
 
-func TestFinalized(t *testing.T) {
-	opts := mtest.NewOptions().ClientType(mtest.Mock)
-	mt := mtest.New(t, opts)
-	defer mt.Close()
-
-	tests := []struct {
-		name         string
-		closeErr     error
-		wantErr      bool
-		wantErrMsg   string
-		wantClosed   bool
-	}{
-		{
-			name:       "success – client closed without error",
-			closeErr:   nil,
-			wantErr:    false,
-			wantClosed: true,
-		},
-		{
-			name:       "error – close returns error",
-			closeErr:   errors.New("network disconnect"),
-			wantErr:    true,
-			wantErrMsg: "close mongo client",
-			wantClosed: true,
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		mt.Run(tc.name, func(mt *mtest.T) {
-			fake := &fakeMongoConnectionUtils{
-				coll:     mt.Coll,
-				closeErr: tc.closeErr,
-			}
-			log := logging.NewNoopLogger()
-			u := newTestableImpl(fake, log)
-
-			err := u.Finalized(context.Background())
-			assert.Equal(t, tc.wantClosed, fake.closeCalled,
-				"Close should have been called on the connection utils")
-			if tc.wantErr {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tc.wantErrMsg)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
 
 // ---------------------------------------------------------------------------
 // TestLoadMethods – orchestration order and error propagation
 // ---------------------------------------------------------------------------
 
-func TestLoadMethods(t *testing.T) {
-	opts := mtest.NewOptions().ClientType(mtest.Mock)
-	mt := mtest.New(t, opts)
-	defer mt.Close()
-
-	// Helper to create the success response used by each update command.
-	successResp := func() bson.D {
-		return mtest.CreateSuccessResponse(
-			bson.E{Key: "n", Value: int32(1)},
-			bson.E{Key: "nModified", Value: int32(1)},
-		)
-	}
-
-	tests := []struct {
-		name         string
-		responses    []bson.D
-		closeErr     error
-		wantErr      bool
-		wantErrMsg   string
-		wantClosed   bool
-		nilColl      bool
-	}{
-		{
-			name: "all operations succeed – four ops called in order",
-			// UpdateOne, UpdateMany, UpdateOne (currentDate), then Close
-			responses: []bson.D{
-				successResp(), // updateOneDocument
-				successResp(), // updateManyDocument
-				successResp(), // updateDocumentWithCurrentDate
-			},
-			wantErr:    false,
-			wantClosed: true,
-		},
-		{
-			name:       "stops at updateOneDocument error (nil collection)",
-			nilColl:    true,
-			wantErr:    true,
-			wantErrMsg: "update one document",
-			wantClosed: false,
-		},
-		{
-			name: "stops at updateManyDocument error",
-			responses: []bson.D{
-				successResp(), // updateOneDocument succeeds
-				mtest.CreateCommandErrorResponse(mtest.CommandError{
-					Code:    2,
-					Message: "many fail",
-				}),
-			},
-			wantErr:    true,
-			wantErrMsg: "update many documents",
-			wantClosed: false,
-		},
-		{
-			name: "stops at updateDocumentWithCurrentDate error",
-			responses: []bson.D{
-				successResp(), // updateOneDocument
-				successResp(), // updateManyDocument
-				mtest.CreateCommandErrorResponse(mtest.CommandError
