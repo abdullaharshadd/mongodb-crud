@@ -28,7 +28,7 @@ package crud
 import (
 	"context"
 
-	"github.com/mongo/crud/internal/mongo/util"
+	"migrated-app/internal/mongo/util"
 )
 
 // UpdateDocuments is the contract for MongoDB document update operations.
