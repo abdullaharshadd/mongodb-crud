@@ -40,8 +40,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"example.com/app/internal/mongo/crud"
-	"example.com/app/internal/mongo/util"
+	"migrated-app/internal/mongo/crud"
+	"migrated-app/internal/mongo/util"
 )
 
 // UpdateDocumentsImpl is the MongoDB-backed implementation of the
