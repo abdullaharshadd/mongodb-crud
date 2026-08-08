@@ -27,7 +27,7 @@ package crud
 import (
 	"context"
 
-	"github.com/example/app/internal/mongo/util"
+	"migrated-app/internal/mongo/util"
 )
 
 // DeleteDocuments is the contract for MongoDB document deletion operations.
