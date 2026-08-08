@@ -32,7 +32,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"example.com/app/internal/conf"
+	"migrated-app/internal/conf"
 )
 
 // Default database and collection names, preserved from the Java source's
