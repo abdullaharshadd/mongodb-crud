@@ -34,7 +34,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/mongo/crud/internal/mongo/util"
+	"migrated-app/internal/mongo/util"
 )
 
 // QueryDocuments is the contract for MongoDB document query operations.
