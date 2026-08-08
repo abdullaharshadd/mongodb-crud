@@ -27,7 +27,7 @@ package crud
 import (
 	"context"
 
-	"github.com/example/app/internal/mongo/util"
+	"migrated-app/internal/mongo/util"
 )
 
 // InsertDocuments is the contract for the various MongoDB document-insertion
