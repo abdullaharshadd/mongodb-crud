@@ -29,7 +29,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mongo/crud/internal/mongo/crud/impl"
+	"migrated-app/internal/mongo/crud/impl"
 )
 
 // RunInsertWorker executes the document-insertion workflow: it constructs an
